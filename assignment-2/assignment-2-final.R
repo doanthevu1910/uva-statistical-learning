@@ -1,0 +1,155 @@
+rm(list = ls()); cat("\014"); dev.off()
+
+setwd("D:/UvA/BSc Econometrics/Year 2/Block 3/Statistical Learning/Assignment 2")
+
+library(MASS); library(randomForest); set.seed(2022)
+
+dataset1 <- read.csv("dataset1.csv")
+dataset2 <- read.csv("dataset2.csv")
+dataset3 <- read.csv("dataset3.csv")
+dataset4 <- read.csv("dataset4.csv")
+dataset5 <- read.csv("dataset5.csv")
+
+#Logistic Regression, or
+#Quadratic Discriminant Analysis, or
+#A random forest with 500 trees using sqrt(p) variables and the seed number 2022 in R. 
+
+#Dataset 1
+data <- dataset1; attach(data)
+
+##Logistic Regression
+
+###over all features
+
+model <- glm(target ~., data = data, 
+             family = binomial)
+
+summary(model)
+
+p_hat <- predict(model, newdata = data, 
+                 type = "response")
+
+y_hat <- rep(0, length(p_hat)); y_hat[p_hat > 0.5] <- 1
+
+CM <- table(predicted = y_hat, truth = data$target); CM
+
+print(sprintf("LR (all features): overall fraction correct= %10.6f", 
+              (CM[1,1] + CM[2,2])/sum(CM)))
+
+y1 <- y_hat
+
+#Dataset 2
+data <- dataset2; attach(data); set.seed(2022)
+
+target <- as.factor(data$target)
+
+##Random forest
+
+model.rf <- randomForest(target ~., data = data, mtry = round(sqrt(ncol(data) - 1)), 
+                         ntree = 500, importance = TRUE)
+
+#p_hat <- predict(model.rf, newdata = data, type = "prob")[, 2]
+
+y_hat <- predict(model.rf, type = "response")
+
+sum(y_hat == data$target) 
+
+#y_hat <- rep(0, length(p_hat)); y_hat[p_hat > 0.5] <- 1
+
+#CM <- table(predicted = y_hat, truth = data$target); CM
+
+#print(sprintf("RF: overall fraction correct= %10.6f", (CM[1,1] + CM[2,2])/sum(CM)))
+
+#sum(y_hat == data$target)
+
+y2 <- y_hat
+
+#Alternative
+
+#set.seed(2022)
+#dataset2 <- read.csv("dataset2.csv")
+#summary(dataset2)
+#library(randomForest)
+#dataset2[,1] <- as.factor(dataset2$target)
+
+#n.p2 <- ncol(dataset2) - 1
+
+#m.ds2 <- randomForest(target ~., data = dataset2,mtry = round(sqrt(n.p2)), ntree = 500, importance = TRUE)
+#m.ds2
+#yhat.2 <- predict(m.ds2, type = "response")
+#sum(yhat.2 == dataset2$target)#?????????
+
+#y2 <- yhat.2
+
+#Dataset 3
+data <- dataset3; attach(data)
+
+##Logistic Regression
+
+###over all features
+
+model <- glm(target ~., data = data, 
+             family = binomial)
+
+summary(model)
+
+p_hat <- predict(model, newdata = data, 
+                 type = "response")
+
+y_hat <- rep(0, length(p_hat))
+y_hat[p_hat > 0.5] <- 1
+
+CM <- table(predicted = y_hat, truth = data$target); CM
+
+print(sprintf("LR (all features): overall fraction correct= %10.6f", (CM[1,1] + CM[2,2])/sum(CM)))
+
+y3 <- y_hat
+
+#Dataset 4
+data <- dataset4; attach(data)
+
+##QDA
+qda.fit <- qda(target ~ ., data = data)
+
+qda.predict <- predict(qda.fit, type = "response")
+
+CM <- table(predicted = qda.predict$class, truth = data$target); CM
+
+print(sprintf("QDA: overall fraction correct= %10.6f", (CM[1,1] + CM[2,2])/sum(CM)))
+
+p_hat <- qda.predict$posterior[, 2]
+
+y_hat <- rep(0, length(p_hat)); y_hat[p_hat > 0.5] <- 1
+
+y4 <- y_hat
+
+#Dataset 5
+data <- dataset5; attach(data)
+
+##QDA
+qda.fit <- qda(target ~ ., data = data)
+
+qda.predict <- predict(qda.fit, type = "response")
+
+CM <- table(predicted = qda.predict$class, truth = data$target); CM
+
+print(sprintf("QDA: overall fraction correct= %10.6f", (CM[1,1] + CM[2,2])/sum(CM)))
+
+p_hat <- qda.predict$posterior[, 2]
+
+y_hat <- rep(0, length(p_hat)); y_hat[p_hat > 0.5] <- 1
+
+y5 <- y_hat
+
+#Results
+result <- read.csv("Answer_Sheet.csv")
+
+result$Data.Set.1 <- y1
+result$Data.Set.2 <- y2
+result$Data.Set.3 <- y3
+result$Data.Set.4 <- y4
+result$Data.Set.5 <- y5
+
+write.csv(result, "Answer_Sheet.csv", row.names = FALSE)
+
+View(result)
